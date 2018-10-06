@@ -34,16 +34,22 @@ def Euclidean_heuristic(node: Coordinate, goal: Coordinate):
 
 def pathFinding(source: Coordinate, goal: Coordinate, maps, size, path):
 	totalSteps = size*size
-	nextNode = Coordinate(0,0)
+	nextNode = source
 	nextstep = Euclidean_heuristic(source,goal)
-	minLocal = Coordinate(0,0)
+	path.extend([source])
 
-	for step in range(totalSteps):
-		maps[source.mX][source.mY]=2
-		path.extend([source])
+	for i in range(totalSteps):
+		#Quay lui
+		############
+
+		if(source.mX != nextNode.mX or source.mY!= nextNode.mY):
+			source = nextNode
+			maps[source.mX][source.mY]=2
+			path.extend([source])
+			nextstep = Euclidean_heuristic(source,goal)
 		if (source.mX==goal.mX and source.mY==goal.mY):
 			print("yeahhhhhh")
-			return step , maps , path;
+			return maps , path;
 		for i in range(-1,2):
 			for j in range(-1,2):
 				if(source.mX + i >= 0 and source.mY + j >=0 and 
@@ -55,8 +61,7 @@ def pathFinding(source: Coordinate, goal: Coordinate, maps, size, path):
 						if(distance < nextstep):
 							nextstep = distance
 							nextNode = node
-		source = nextNode
-		nextstep = Euclidean_heuristic(source,goal)
+	return  maps , path;
 
 
 def writeOutputData(outputPath,maps,size,source:Coordinate,goal:Coordinate, step,path):
@@ -93,8 +98,8 @@ def main():
 	maps=[[]]
 	mapsSize = 0
 	maps,mapsSize,source,goal = readInputData(INPUT_PATH,maps,mapsSize,source,goal)
-	print(goal.mX+goal.mY)
-	step,map,path = pathFinding(source,goal,maps,mapsSize,path)
+	map,path = pathFinding(source,goal,maps,mapsSize,path)
+	step = len(path)
 	writeOutputData(OUTPUT_PATH,maps,mapsSize,source,goal, step,path)
 
 if __name__ == '__main__':
