@@ -35,34 +35,55 @@ def Euclidean_heuristic(node: Coordinate, goal: Coordinate):
 def pathFinding(source: Coordinate, goal: Coordinate, maps, size, path):
 	totalSteps = size*size
 	nextNode = source
-	nextstep = Euclidean_heuristic(source,goal)
+	currentNodeDistance = Euclidean_heuristic(source,goal)
 	path.extend([source])
+	passedNodes=[]
+	passedNodes.extend([source])
 
-	for i in range(totalSteps):
-		#Quay lui
-		############
+	for k in range(totalSteps):
 
-		if(source.mX != nextNode.mX or source.mY!= nextNode.mY):
-			source = nextNode
-			maps[source.mX][source.mY]=2
-			path.extend([source])
-			nextstep = Euclidean_heuristic(source,goal)
 		if (source.mX==goal.mX and source.mY==goal.mY):
 			print("yeahhhhhh")
 			return maps , path;
+		#Loop from 1 to 8 position around current postion
+		#to find out which is best next position for robot to move
 		for i in range(-1,2):
 			for j in range(-1,2):
 				if(source.mX + i >= 0 and source.mY + j >=0 and 
 				source.mX + i < size and source.mY +j < size 
 				and not(i == j == 0)):
 					if(maps[source.mX+i][source.mY+j]!=1):
-						node = Coordinate(source.mX+i,source.mY+j)
-						distance = Euclidean_heuristic(node,goal)
-						if(distance < nextstep):
-							nextstep = distance
-							nextNode = node
+						Node = Coordinate(source.mX+i,source.mY+j)
+						Distance = Euclidean_heuristic(Node,goal)
+						if(Distance < currentNodeDistance 
+							and not isPassedNode(Node,passedNodes)):
+							currentNodeDistance = Distance
+							nextNode = Node
+		##Robot can move to next position
+		if(source.mX != nextNode.mX or source.mY!= nextNode.mY):
+			source = nextNode
+			maps[source.mX][source.mY]=2
+			path.extend([source])
+			passedNodes.extend([source])
+			currentNodeDistance = Euclidean_heuristic(source,goal)
+		else:
+			#Robot can not move to next position
+			#Robot need to rollback
+			############
+			removedNode = path[len(path)-1]
+			maps[removedNode.mX][removedNode.mY]=0
+			path=path[:-1]
+
+			source=path[len(path)-1]
+			nextNode = source
+			currentNodeDistance = Euclidean_heuristic(source,goal)
 	return  maps , path;
 
+def isPassedNode(currentNode:Coordinate,passedNodes):
+	for node in passedNodes:
+		if(node.mX==currentNode.mX and node.mY==currentNode.mY):
+			return True;
+	return False;
 
 def writeOutputData(outputPath,maps,size,source:Coordinate,goal:Coordinate, step,path):
 	outputFile = open(outputPath,"w")
@@ -98,9 +119,9 @@ def main():
 	maps=[[]]
 	mapsSize = 0
 	maps,mapsSize,source,goal = readInputData(INPUT_PATH,maps,mapsSize,source,goal)
-	map,path = pathFinding(source,goal,maps,mapsSize,path)
+	maps,path = pathFinding(source,goal,maps,mapsSize,path)
 	step = len(path)
+	print(maps);
 	writeOutputData(OUTPUT_PATH,maps,mapsSize,source,goal, step,path)
-
 if __name__ == '__main__':
 	main()
