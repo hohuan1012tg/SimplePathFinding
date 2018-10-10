@@ -1,4 +1,4 @@
-import numpy as np
+#import numpy as np
 import math 
 
 class Stack:
@@ -151,15 +151,18 @@ def writeOutputData(outputPath,maps,size,source:Coordinate,goal:Coordinate, step
 	outputFile.close()
 
 def main():
-	path = Stack()
-	source = Coordinate(0,0)
-	goal = Coordinate(0,0)
-	maps=[[]]
-	mapsSize = 0
-	maps,mapsSize,source,goal = readInputData(INPUT_PATH,maps,mapsSize,source,goal)
-	maps,path = pathFinding(source,goal,maps,mapsSize,path)
-	step = path.size()
-	print(maps,step);
-	writeOutputData(OUTPUT_PATH,maps,mapsSize,source,goal, step,path)
+	# path = Stack()
+	# source = Coordinate(0,0)
+	# goal = Coordinate(0,0)
+	# maps=[[]]
+	# mapsSize = 0
+	# maps,mapsSize,source,goal = readInputData(INPUT_PATH,maps,mapsSize,source,goal)
+	# maps,path = pathFinding(source,goal,maps,mapsSize,path)
+	# step = path.size()
+	# print(maps,step);
+	# writeOutputData(OUTPUT_PATH,maps,mapsSize,source,goal, step,path)
+	a = Coordinate(3,2);
+	(x,y)=a
+	print(x,y)
 if __name__ == '__main__':
 	main()
