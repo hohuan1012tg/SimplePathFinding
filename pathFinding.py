@@ -125,6 +125,7 @@ def aStarSearch(graph,source,goal):
                 graph.maps[current_node[0]][current_node[1]]=2
                 path.append(current_node)
                 current_node = parentNode[current_node]
+            graph.maps[current_node[0]][current_node[1]]=2
             break;
 
         for neighbor in graph.neighbors(current_node):
