@@ -1,10 +1,35 @@
 import math
 import heapq
 import numpy as np
-
+import math
+import pygame
 
 INPUT_PATH = 'input.txt'
 OUTPUT_PATH = "output.txt"
+
+"""
+Colors for graph
+The Wall (1): brown rgb(165, 42, 42)
+Maps (0): silver rgb(192, 192, 192)
+Opened node (3): bisque rgb(255, 228, 196)
+Current_node (node is passed by robot) (4): darkorange rgb(255, 140, 0)
+Source (8): aqua rgb(0, 255, 255)
+Goal (9): violet rgb(238, 130, 238)
+path (2): green rgb(0, 128, 0)
+"""
+BROWN = (165, 42, 42)
+SILVER = (192, 192, 192)
+BISQUE = (255, 228, 196)
+DARKORANGE = (255, 140, 0)
+AQUA = (0, 255, 255)
+VIOLET = (238, 130, 238)
+GREEN = (0, 128, 0)
+
+MARGIN = 2
+WINDOW_SIZE = []
+WIDTH = 40
+HEIGHT = 40
+
 
 class Graph:
     def __init__(self,maps,size):
@@ -61,8 +86,13 @@ def readInputData(inputPath):
 
     indata = indata[5:]
     maps = np.reshape(indata,(-1,size))
-    inputFile.close()
     
+    maps[source[0]][source[1]]=8
+    maps[goal[0]][goal[1]]=9
+    global WINDOW_SIZE
+    WINDOW_SIZE = [WIDTH*size+size*MARGIN,HEIGHT*size+size*MARGIN]
+
+    inputFile.close()
     return maps,size,source,goal
 def writeOutputData(outputPath,graph,source,goal,path):
     outputFile = open(outputPath,"w")
@@ -70,14 +100,8 @@ def writeOutputData(outputPath,graph,source,goal,path):
     step = len(path)
     outputFile.write('%d\n'%step)
 
-    #for node in path:
-    # path.invert()
-    # while (not path.isEmpty()):
-    #     node = path.peek()
-    #     path.pop()
-    #     outputFile.write('({},{})\t'.format(node.mX,node.mY))
-    for i in range(len(path)-1,0,1):
-        outputFile.write('{}\t',path[i])
+    for (x,y) in path:
+        outputFile.write('({},{})\t'.format(x,y))
     outputFile.write('\n')
 
     maps = graph.maps
@@ -94,6 +118,7 @@ def writeOutputData(outputPath,graph,source,goal,path):
             pathingMap[x][y]='o';
         else:
             pathingMap[x][y]='-'
+        
     pathingMap[source[0]][source[1]]='S'
     pathingMap[goal[0]][goal[1]]='G'
 
@@ -103,7 +128,7 @@ def writeOutputData(outputPath,graph,source,goal,path):
             outputFile.write('\n')
     outputFile.close()
 
-def aStarSearch(graph,source,goal):
+def aStarSearch(graph,source,goal,screen,clock):
     openList = PriorityQueue();
 
     passedList = []
@@ -113,39 +138,83 @@ def aStarSearch(graph,source,goal):
     parentNode[source]=0
     passedList.append(source)
     path = []
+    drawMaps(graph,source,goal,screen)
 
     while not openList.empty():
 
         current = openList.get();
         current_node = current[1]
+        graph.maps[current_node[0]][current_node[1]]=4
 
         if(current_node == goal):
             print('yeahhhhhh')
-            while parentNode[current_node] != 0:
-                graph.maps[current_node[0]][current_node[1]]=2
-                path.append(current_node)
-                current_node = parentNode[current_node]
-            graph.maps[current_node[0]][current_node[1]]=2
+            path = reTrackingPath(graph,parentNode,current_node)
+            drawPathLine(graph,goal,path,screen)
             break;
 
         for neighbor in graph.neighbors(current_node):
             if(neighbor not in passedList):
+                graph.maps[neighbor[0]][neighbor[1]]=3
                 AStartValueOfNeighbor = Euclidean_heuristic(neighbor,goal)
                 openList.push(AStartValueOfNeighbor,neighbor)
                 parentNode[neighbor]=current_node
                 passedList.append(neighbor)
+        drawProcess(graph,source,screen)
+        clock.tick(30)
     return path
+def reTrackingPath(graph,parentNode,current_node):
+	path =[]
+	#node before goal
+	current_node=parentNode[current_node];
 
+	while parentNode[current_node] != 0:
+		graph.maps[current_node[0]][current_node[1]]=2
+		path.append(current_node)
+		current_node = parentNode[current_node]
+	path.reverse()    
+	return path
+
+def drawMaps(graph,source,goal,screen):
+	maps = graph.maps
+	screen.fill(SILVER)
+	for (x,y),value in np.ndenumerate(maps):
+		if(maps[x][y]==1):
+			pygame.draw.rect(screen,BROWN,[(WIDTH+MARGIN)*y+MARGIN,(HEIGHT+MARGIN)*x+MARGIN,WIDTH,HEIGHT])
+	pygame.draw.rect(screen,AQUA,[(WIDTH+MARGIN)*source[1]+MARGIN,(HEIGHT+MARGIN)*source[0]+MARGIN,WIDTH,HEIGHT])
+	pygame.draw.rect(screen,VIOLET,[(WIDTH+MARGIN)*goal[1]+MARGIN,(HEIGHT+MARGIN)*goal[0]+MARGIN,WIDTH,HEIGHT])
+	pygame.display.flip()
+
+def drawProcess(graph,source,screen):
+	maps = graph.maps
+	for (x,y),value in np.ndenumerate(maps):
+		if(maps[x][y]==3):
+			pygame.draw.rect(screen,BISQUE,[(WIDTH+MARGIN)*y+MARGIN,(HEIGHT+MARGIN)*x+MARGIN,WIDTH,HEIGHT])
+		elif(maps[x][y]==4):
+			pygame.draw.rect(screen,DARKORANGE,[(WIDTH+MARGIN)*y+MARGIN,(HEIGHT+MARGIN)*x+MARGIN,WIDTH,HEIGHT])
+	pygame.draw.rect(screen,AQUA,[(WIDTH+MARGIN)*source[1]+MARGIN,(HEIGHT+MARGIN)*source[0]+MARGIN,WIDTH,HEIGHT])
+	pygame.display.flip()
+
+
+def drawPathLine(graph,goal,path,screen):
+	pygame.draw.rect(screen,VIOLET,[(WIDTH+MARGIN)*goal[1]+MARGIN,(HEIGHT+MARGIN)*goal[0]+MARGIN,WIDTH,HEIGHT])
+	for (x,y) in path:
+		pygame.draw.rect(screen,GREEN,[(WIDTH+MARGIN)*y+MARGIN,(HEIGHT+MARGIN)*x+MARGIN,WIDTH,HEIGHT])
+	pygame.display.flip()
 def main():
-
     maps,size,source,goal= readInputData(INPUT_PATH)
+
+    pygame.init()
+    screen = pygame.display.set_mode(WINDOW_SIZE)
+    pygame.display.set_caption("A* Search")
+    clock = pygame.time.Clock()
+
     graph = Graph(maps,size)
 
-    path = aStarSearch(graph, source, goal)
+    
+    path = aStarSearch(graph, source, goal,screen,clock)
 
-    print(path)
     print(maps)
-
+    
     writeOutputData(OUTPUT_PATH,graph,source,goal,path)
 
 
