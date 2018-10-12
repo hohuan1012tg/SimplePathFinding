@@ -1,13 +1,32 @@
-13
-(9,1)	(8,2)	(7,3)	(6,4)	(6,5)	(7,6)	(8,7)	(7,8)	(6,9)	(5,8)	(4,9)	(3,9)	(2,9)	
-- - - - - - - - - - - 
-- - - - - - - - - G - 
-o - o o o o o o - x - 
-- - - o o o o o o x o 
-- - - - - - o o - x o 
-- - - - - - o o x o o 
-o o - - x x o o o x - 
-- - - x - - x o x o - 
-- - x - - - - x - - - 
-- x - - - - - - - o - 
-S - - - - - - - - o - 
+31
+(2,3)	(3,4)	(4,5)	(5,5)	(6,4)	(7,5)	(8,4)	(9,4)	(10,4)	(11,3)	(12,3)	(13,2)	(14,3)	(15,4)	(16,5)	(17,4)	(18,5)	(19,6)	(20,6)	(21,5)	(22,6)	(23,7)	(22,8)	(22,9)	(23,10)	(24,11)	(25,10)	(26,11)	(27,12)	(28,13)	(29,14)	
+o o - - o - - - - o - - - o o o - o o - - o - - - - - o - o 
+o - S o o o - o - o o - o - o - o - - - o - o o o - o o o - 
+- o - x - - o - - - o - - - - - o - - - - - - - - o o o - o 
+o o o - x - - - - - o - o o o - - - o o - - o o o o - - - - 
+- o - o - x o o - o o - o - o o o - - o - - o - - o - - - - 
+- o - - o x - o - - o - - o o - - - - - - - - - o - o - - - 
+- o - o x o o o o - - - - o o o o - o - o o o - - - - - o o 
+o o o - o x o - o - - - o o - o - - - - o o - - - - - - - o 
+- - o - x o o o o o - o o - - o - o o o o o o - - o - - - - 
+- o - - x o - - o - - - - - o - o o - o o - - - o - - - - - 
+o o - - x o o - - - - - - o o o - o - - o o - o - - - - o - 
+- o - x o - - - o - - - - o - - - o - o - - - - o - o - o - 
+- - - x o o o - - - - - - o o o o o - o - - o - - - o o - o 
+- - x o o - - - o - - - o o o o - - o - o - o - o - - - - o 
+- - o x o o - o - o - - o o - - o - o - - - o o - o - o - - 
+- - o - x - - - - o o o o o - - o - - - o o o o o - - - o - 
+- - - o o x - - - o o - - - - - o - - - - - o - o o o - o o 
+- - - o x o o o o o o - o o o - - o o - - - o - o - o - o - 
+o o - o o x o o - - - - o o o o - - o o o o - - o o - - - - 
+- o - o - - x o - o - o o - - o o - o o - o - o - - o - - - 
+- - - - - - x o o o - o o o - o - o - - - - o o - o - - o - 
+o o - o - x o o - - - - - - - o - - - - o - - - - - o o o o 
+o - - o o o x o x x - o - - - - o o - - - o o - - o o - o - 
+o - o o o o o x o o x - - - - - - o o o - - - - o - o - o o 
+o - - - - o o o o - o x o - - - o - - - o o - o - - o - - - 
+o o - o - o - o o o x o o o o o - - o - o o o - - - o - - - 
+o - o o - o - - - - o x o - - - - o - o o - o o - o o - - o 
+o o o - o o - - - - - o x o o o - - - - o o o - - - - - - o 
+o o o - o - - o o - o - - x o G - - - o - - - - o o - o - o 
+o o o - o o - - - o - o o o x o - - - o - o o o o o - - o o 
