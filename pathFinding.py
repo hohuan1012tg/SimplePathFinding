@@ -4,7 +4,7 @@ import numpy as np
 import math
 import pygame
 
-INPUT_PATH = 'test.txt'
+INPUT_PATH = 'input.txt'
 OUTPUT_PATH = "output.txt"
 
 """
@@ -64,9 +64,10 @@ class PriorityQueue:
     def get(self):
         return heapq.heappop(self.items)
 
-
+def g_value(g_valueOfparent):
+	return g_valueOfparent +1
 def Euclidean_heuristic(node, goal):
-    D=1.0
+    D=2.5
     (x,y)=node;
     (a,b)=goal;
     dx = math.fabs(x - a)
@@ -96,17 +97,20 @@ def readInputData(inputPath):
 def writeOutputData(outputPath,graph,source,goal,path):
     outputFile = open(outputPath,"w")
 
-    step = len(path)
+    step = len(path)+2
     outputFile.write('%d\n'%step)
 
+    #soure
+    outputFile.write('({},{})\t'.format(source[0],source[1]))
+    #path
     if(step>0):
         for (x,y) in path:
             outputFile.write('({},{})\t'.format(x,y))
-        outputFile.write('\n')
+    #goal
+    outputFile.write('({},{})\n'.format(goal[0],goal[1]))
 
     maps = graph.maps
     size = graph.size
-
 
     pathingMap = [['']*size for i in range(size)]
     pathingMap = np.reshape(pathingMap,(-1,size))
@@ -157,16 +161,17 @@ def aStarSearch(graph,source,goal,screen,clock):
             break;
 
         for neighbor in graph.neighbors(current_node):
-            neighbor_g_value = g_values[current_node] + 1;
+            neighbor_g_value =  g_value(g_values[current_node])
             if(neighbor not in passedList):
                 graph.maps[neighbor[0]][neighbor[1]]=3
                 AStartValueOfNeighbor = neighbor_g_value + Euclidean_heuristic(neighbor,goal)
-                g_values[neighbor]=AStartValueOfNeighbor
+                g_values[neighbor]=neighbor_g_value
                 openList.push(AStartValueOfNeighbor,neighbor)
                 parentNode[neighbor]=current_node
                 passedList.append(neighbor)
+                print(neighbor,AStartValueOfNeighbor,neighbor_g_value,Euclidean_heuristic(neighbor,goal))
         drawProcess(graph,source,screen)
-        clock.tick(30)
+        clock.tick(60)
     return path
 def reTrackingPath(graph,parentNode,current_node):
 	path =[]
@@ -179,7 +184,11 @@ def reTrackingPath(graph,parentNode,current_node):
 		current_node = parentNode[current_node]
 	path.reverse()    
 	return path
-
+def wait():
+	while True:
+		for event in pygame.event.get():
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				return
 def drawMaps(graph,source,goal,screen):
 	maps = graph.maps
 	# fill full maps
@@ -224,7 +233,8 @@ def main():
     path = aStarSearch(graph, source, goal,screen,clock)
 
     #print(maps)
-    pygame.time.delay(5000)
+    #pygame.time.delay(5000)
+    wait()
     
     writeOutputData(OUTPUT_PATH,graph,source,goal,path)
 
