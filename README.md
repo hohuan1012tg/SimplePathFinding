@@ -1,2 +1,2 @@
-# SimplePathFinding
-PathFinding Project
+# pathFinding
+Simple Path Finding Visualization Using A*
