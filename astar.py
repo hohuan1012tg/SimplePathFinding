@@ -1,108 +1,15 @@
 import sys
 import heapq
 import copy
-import gui
+import utilities
+import grid
+import message
 import threading
-from math import sqrt
-from timeit import timeit
-
-
-class Position:
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y
-
-
-class Map:
-    def __init__(self):
-        self.size = 0
-        self.map = []
-        self.start = Position()
-        self.end = Position()
-
-    def read_from_file(self, file_name):
-        try:
-            with open(file_name, "r") as file:
-                try:
-                    # Read all data
-                    data = file.read().strip().split()
-                    self.size = int(data[0])
-
-                    # Read start point position
-                    self.start.x = int(data[1])
-                    self.start.y = int(data[2])
-
-                    # Read end point position
-                    self.end.x = int(data[3])
-                    self.end.y = int(data[4])
-
-                    # Read map data
-                    data = data[5:]
-                    for x in range(0, self.size):
-                        for y in range(0, self.size):
-                            if y == 0:
-                                self.map.append([])
-                            block = int(data[x * self.size + y])
-                            if block < 0 or block > 1:
-                                raise Exception(
-                                    "Value in map must be either 0 or 1")
-                            self.map[x].append(block)
-                except IOError:
-                    print("Something went wrong while reading from {}".format(file_name))
-                finally:
-                    file.close()
-            return True
-        except FileNotFoundError:
-            return False
-
-    def save_to_file(self, file_name):
-        try:
-            with open(file_name, "w") as file:
-                try:
-                    data = "{}\n".format(self.size)
-                    data += "{} {}\n{} {}\n".format(self.start.x,
-                                                    self.start.y, self.end.x, self.end.y)
-                    for row in range(self.size):
-                        for col in range(self.size):
-                            data += "{} ".format(self.map[row][col])
-                        data += "\n"
-                    file.write(data)
-                except IOError:
-                    print("Something went wrong while writing to {}".format(file_name))
-                finally:
-                    file.close()
-            return True
-        except:
-            return False
-
-    def print_map(self):
-        for x in range(0, self.size):
-            print(self.map[x])
-
-    def set_start_position(self, x, y):
-        if self.is_valid(x,y):
-            self.start.x = x
-            self.start.y = y
-
-    def set_end_position(self, x, y):
-        if self.is_valid(x,y):
-            self.end.x = x
-            self.end.y = y
-
-    def is_valid(self, x, y):
-        return x >= 0 and x < self.size and y >= 0 and y < self.size
-
-    def is_wall(self, x, y):
-        return self.map[x][y] == 1
-    def is_moveable(self,x,y):
-    	return self.is_valid(x,y) and not self.is_wall(x,y)
-
+import search_map
+import heuristic
 
 class SearchNode:
-    def __init__(self, position=Position(), parent=None):
+    def __init__(self, position=search_map.Position(), parent=None):
         self.position = position
         self.parent = parent
 
@@ -129,24 +36,7 @@ class PriorityQueue:
     def empty(self):
         return len(self.queue) == 0
 
-
-class Heuristic:
-    @staticmethod
-    def euclidian_distance(p1, p2):
-        return sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
-
-
-class PathFinding:
-    @staticmethod
-    def create_map(size, default_value):
-        check_map = []
-        for x in range(0, size):
-            for y in range(0, size):
-                if y == 0:
-                    check_map.append([])
-                check_map[x].append(default_value)
-        return check_map
-
+class AStar:
     @staticmethod
     def parse_result(map, open_list, path_found, message_queue=None):
         # Return result map with with the path from start to end
@@ -167,18 +57,18 @@ class PathFinding:
             node = open_list[-1]
             correct_path.append(node)
             if message_queue != None:
-                message = gui.Message(action="PUSH", param=gui.Grid.CORRECT_PATH_ID)
-                message.x = node.position.x
-                message.y = node.position.y
-                message_queue.put_nowait(message)
+                msg = message.Message(action="PUSH", param=grid.Grid.CORRECT_PATH_ID)
+                msg.x = node.position.x
+                msg.y = node.position.y
+                message_queue.put_nowait(msg)
             node = node.parent
             while node.parent != None:
                 correct_path.append(node)
                 if message_queue != None:
-                    message = gui.Message(action="PUSH", param=gui.Grid.CORRECT_PATH_ID)
-                    message.x = node.position.x
-                    message.y = node.position.y
-                    message_queue.put_nowait(message)
+                    msg = message.Message(action="PUSH", param=grid.Grid.CORRECT_PATH_ID)
+                    msg.x = node.position.x
+                    msg.y = node.position.y
+                    message_queue.put_nowait(msg)
                 x = node.position.x
                 y = node.position.y
                 result[x][y] = "x"
@@ -186,20 +76,21 @@ class PathFinding:
 
             correct_path.append(SearchNode(map.start))
             if message_queue != None:
-                message = gui.Message(action="PUSH", param=gui.Grid.CORRECT_PATH_ID)
-                message.x = node.position.x
-                message.y = node.position.y
-                message_queue.put_nowait(message)
+                msg = message.Message(action="PUSH", param=grid.Grid.CORRECT_PATH_ID)
+                msg.x = node.position.x
+                msg.y = node.position.y
+                message_queue.put_nowait(msg)
             correct_path.reverse()
-        if message_queue !=None:
-            message_queue.put_nowait(gui.Message(action="UNLOCK", param=path_found))
+
+        if message_queue != None:
+            message_queue.put_nowait(message.Message(action="UNLOCK", param=path_found))
         return result, correct_path
 
     @staticmethod
-    @timeit
+    @utilities.timer
     def search_map(map, heuristic, epsilon=1, message_queue=None):
         # Create a map for checking if a block is in queue
-        check_map = PathFinding.create_map(map.size, -1)
+        check_map = utilities.Utilities.create_matrix(map.size, -1)
         check_map[map.start.x][map.start.y] = 0
 
         # Run algorithm
@@ -208,7 +99,10 @@ class PathFinding:
         queue = PriorityQueue()
         # Lock user input
         if message_queue != None:
-            message_queue.put_nowait(gui.Message(action="LOCK"))
+            message_queue.put_nowait(message.Message(action="LOCK"))
+        # Clear path
+        if message_queue != None:
+            message_queue.put_nowait(message.Message(action="CLEAR"))
         node = SearchNode(map.start, None)
         queue.push(node, heuristic(map.start, map.end))
         while not queue.empty():
@@ -216,7 +110,7 @@ class PathFinding:
 
             # Request drawing
             if message_queue != None:
-                pop_message = gui.Message(action="PUSH", param=gui.Grid.POP_ID)
+                pop_message = message.Message(action="PUSH", param=grid.Grid.POP_ID)
                 pop_message.x = node.data.position.x
                 pop_message.y = node.data.position.y
                 message_queue.put_nowait(pop_message)
@@ -224,8 +118,7 @@ class PathFinding:
             node = node.data
             x = node.position.x
             y = node.position.y
-            #if not map.is_valid(x, y) or map.is_wall(x, y):
-            if not map.is_moveable(x,y):
+            if not map.is_valid(x, y) or map.is_wall(x, y):
                 break
             open_list.append(node)
 
@@ -249,7 +142,7 @@ class PathFinding:
                 tempx = x + dx
                 tempy = y + dy
                 # Child is a wall or not valid
-                if not map.is_moveable(tempx,tempy):
+                if not map.is_valid(tempx, tempy) or map.is_wall(tempx, tempy):
                     continue
                 # Child is already in queue and has smaller g(x)
                 if check_map[tempx][tempy] != -1 and check_map[tempx][tempy] <= g_value:
@@ -257,19 +150,18 @@ class PathFinding:
 
                 # Otherwise, add child to queue
                 check_map[tempx][tempy] = g_value
-                child_pos = Position(tempx, tempy)
+                child_pos = search_map.Position(tempx, tempy)
                 f_value = g_value + heuristic(child_pos, map.end) * epsilon
                 queue.push(SearchNode(child_pos, node), f_value)
 
                 # Request drawing
                 if message_queue != None:
-                    in_queue_message = gui.Message(action="PUSH", param=gui.Grid.IN_QUEUE_ID)
+                    in_queue_message = message.Message(action="PUSH", param=grid.Grid.IN_QUEUE_ID)
                     in_queue_message.x = tempx
                     in_queue_message.y = tempy
                     message_queue.put_nowait(in_queue_message)
 
         return map, open_list, path_found
-
 
 class TestPathFinding:
     def __init__(self, inp="", out="", time_input="", time_output=""):
@@ -280,28 +172,12 @@ class TestPathFinding:
 
     @staticmethod
     def run_path_finding(map, heuristic, epsilon=1):
-        result, queue, path_found = PathFinding.search_map(
+        result, queue, path_found = AStar.search_map(
             map, heuristic, epsilon=epsilon)
-        return PathFinding.parse_result(result, queue, path_found)
+        return AStar.parse_result(result, queue, path_found)
 
-    @staticmethod
-    def run_path_finding_time_limited(map, heuristic, time_limit):
-        depsilon = 0.5
-        epsilon = 1
-
-        _, _, _ = PathFinding.search_map(map, heuristic, epsilon=epsilon)
-        while int(PathFinding.search_map.time_elapsed) < int(time_limit) and epsilon > 0 and depsilon > 0.001:
-            temp_epsilon = epsilon - depsilon
-            _, _, _ = PathFinding.search_map(map, heuristic, temp_epsilon)
-            if int(PathFinding.search_map.time_elapsed) > int(time_limit):
-                depsilon -= 0.001
-            else:
-                epsilon = temp_epsilon
-
-        return epsilon
-
-    def run_time_free(self, heuristic):
-        map = Map()
+    def run(self, heuristic):
+        map = search_map.Map()
         map.read_from_file(self.input)
 
         try:
@@ -327,69 +203,19 @@ class TestPathFinding:
         finally:
             out.close()
 
-    def run_time_limited(self, heuristic):
-        map = Map()
-        map.read_from_file(self.input)
-
-        time_list = []
-        try:
-            with open(self.time_input, "r") as inp:
-                indata = inp.read().strip().split()
-                for limit in indata:
-                    f_limit = float(limit)
-                    time_list.append(f_limit)
-        except IOError:
-            print("Something went wrong while reading from {}".format(self.time_input))
-        finally:
-            inp.close()
-
-        try:
-            with open(self.time_output, "w") as out:
-                for time in time_list:
-                    epsilon = self.run_path_finding_time_limited(
-                        map, heuristic, time)
-                    out.write("{}\n".format(epsilon))
-        except IOError:
-            print("Something went wrong while writing to {}".format(self.time_output))
-        finally:
-            out.close()
-
-
-class SearchThread(threading.Thread):
-    def __init__(self, map=None, heuristic=Heuristic.euclidian_distance, epsilon=1.0, message_queue=None):
-        threading.Thread.__init__(self)
-        self.started = False
-        self.finished = False
-        self.result = None
-        self.map = map
-        self.heuristic = heuristic
-        self.epsilon = epsilon
-        self.message_queue = message_queue
-
-    def run(self):
-        self.started = True
-        if self.map == None:
-            self.finished = True
-            return -1
-        raw_res = PathFinding.search_map(self.map, self.heuristic, self.epsilon, self.message_queue)
-        self.result = PathFinding.parse_result(*raw_res, message_queue=self.message_queue)
-        self.finished = True
-
-    def runnable(self):
-        return self.map != None
-
-
 if __name__ == "__main__":
-    if len(sys.argv) != 3 and len(sys.argv) != 5:
-        raise Exception("""This program needs at least 2 arguments for input path and output path
-                            Paths for time limit input and output are optional""")
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
+        raise Exception("""This program needs at least 2 arguments for input path and output path""")
+
     input_path = sys.argv[1]
     output_path = sys.argv[2]
 
-    test = TestPathFinding(input_path, output_path)
-    test.run_time_free(Heuristic.euclidian_distance)
+    h = heuristic.Heuristic.euclidian_distance
+    if len(sys.argv) == 4:
+        if sys.argv[3] == "max":
+            h = heuristic.Heuristic.max_dx_dy
+        elif sys.argv[3] == "min":
+            h = heuristic.Heuristic.min_dx_dy
 
-    if len(sys.argv) == 5:
-        test.time_input = sys.argv[3]
-        test.time_output = sys.argv[4]
-        test.run_time_limited(Heuristic.euclidian_distance)
+    test = TestPathFinding(input_path, output_path)
+    test.run(h)
